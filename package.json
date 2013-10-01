@@ -1,0 +1,39 @@
+{
+  "name": "karma-html-reporter",
+  "version": "0.1.0",
+  "description": "A Karma plugin. Report results in pretty html format.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+  "jasmine_template.html",
+  "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/karma-runner/karma-junit-reporter.git"
+  },
+
+  "keywords": [
+    "karma-plugin",
+    "karma-reporter",
+    "junit"
+  ],
+  "author": "Daniel Tabuenca <dtabuenc@gmail.com>",
+  "dependencies": {
+    "mu2": "~0.5.19",
+    "lodash": "~2.2.0"
+  },
+  "peerDependencies": {
+    "karma": ">=0.9"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-npm": "~0.0.2",
+    "grunt-bump": "~0.0.7",
+    "grunt-auto-release": "~0.0.2"
+  },
+  "contributors": []
+}
