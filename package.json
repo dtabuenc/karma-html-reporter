@@ -18,7 +18,7 @@
   "keywords": [
     "karma-plugin",
     "karma-reporter",
-    "junit"
+    "html"
   ],
   "author": "Daniel Tabuenca <dtabuenc@gmail.com>",
   "dependencies": {
