@@ -65,17 +65,17 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 					} else {
 						log.debug('HTML report written to "%s".', reportFile);
 					}
-
-
 				});
+
+				writeStream.on('finish', function() {
+					if (!--pendingFileWritings) {
+						fileWritingFinished();
+					}
+					template = null;
+				});
+
 				template.pipe(writeStream);
 				template.resume();
-			});
-			template.on("end", function() {
-				if (!--pendingFileWritings) {
-					fileWritingFinished();
-				}
-				template = null;
 			});
 
 		});
