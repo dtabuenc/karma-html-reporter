@@ -7,14 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
-  "jasmine_template.html",
-  "index.js"
+    "jasmine_template.html",
+    "index.js"
   ],
   "repository": {
     "type": "git",
     "url": "git://github.com/dtabuenc/karma-html-reporter"
   },
-
   "keywords": [
     "karma-plugin",
     "karma-reporter",
@@ -35,5 +34,8 @@
     "grunt-bump": "~0.0.7",
     "grunt-auto-release": "~0.0.2"
   },
-  "contributors": []
+  "contributors": [
+    "Daniel Tabuenca <dtabuenc@gmail.com>",
+    "Shawn Fumo <shawn@shawnfumo.com>"
+  ]
 }
