@@ -22,20 +22,21 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		allMessages.push(msg);
 	}];
 
-	this.onRunStart = function(browsers) {
-		var browserInfo;
-		var timestamp = (new Date()).toISOString().substr(0, 19);
+	this.onRunStart = function() {
 		allMessages = [];
-		browsers.forEach(function(browser) {
-			browserInfo = browserResults[browser.id] = {
-				browserName : browser.name,
-				browserFullName : browser.fullName,
-				'package' : pkgName,
-				timestamp : timestamp,
-				hostname : os.hostname(),
-				suites : {}
-			};
-		});
+	};
+
+	this.onBrowserStart = function (browser){
+		var timestamp = (new Date()).toISOString().substr(0, 19);
+		browserResults[browser.id] = {
+			browserName : browser.name,
+			browserFullName : browser.fullName,
+			'package' : pkgName,
+			timestamp : timestamp,
+			hostname : os.hostname(),
+			suites : {}
+		};
+		console.log("Added browser results", browser.id);
 	};
 
 	this.onBrowserComplete = function(browser) {
@@ -97,6 +98,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	});
 
 	function getOrCreateSuite(browser, result) {
+		console.log("Creating suite", browser.id);
 		var suites = browserResults[browser.id].suites;
 		var suiteKey = result.suite.join(" ");
 		if (suites[suiteKey] === undefined) {
