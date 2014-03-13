@@ -36,7 +36,6 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			hostname : os.hostname(),
 			suites : {}
 		};
-		console.log("Added browser results", browser.id);
 	};
 
 	this.onBrowserComplete = function(browser) {
@@ -51,7 +50,6 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			var results = browserResults[browser.id]
 
 			prepareResults(results);
-			//console.log(JSON.stringify(results,null, 4));
 			var outputDir = config.outputDir || 'karma_html';
 			var templatePath = config.templatePath || __dirname + "/jasmine_template.html";
 			var template = mu.compileAndRender(templatePath, results);
@@ -98,7 +96,6 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	});
 
 	function getOrCreateSuite(browser, result) {
-		console.log("Creating suite", browser.id);
 		var suites = browserResults[browser.id].suites;
 		var suiteKey = result.suite.join(" ");
 		if (suites[suiteKey] === undefined) {
