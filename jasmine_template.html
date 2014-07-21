@@ -1,8 +1,10 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{{pageTitle}}</title>
 <style>
 body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
+#HTMLReporter h1 { font-size: 12px; font-weight: normal; text-align: right; margin: 10px 0 10px 0 !important; }
 #HTMLReporter { font-size: 11px; font-family: Monaco, "Lucida Console", monospace; line-height: 14px; color: #333333; }
 #HTMLReporter a { text-decoration: none; }
 #HTMLReporter a:hover { text-decoration: underline; }
@@ -24,17 +26,24 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .failingAlert:first-child { background-color: #b03911; }
 #HTMLReporter .results { margin-top: 14px; }
 #HTMLReporter #details { display: none; }
-#HTMLReporter .resultsMenu, #HTMLReporter .resultsMenu a { background-color: #fff; color: #333333; }
-#HTMLReporter.showDetails .summaryMenuItem { font-weight: normal; text-decoration: inherit; }
+#HTMLReporter .resultsMenu { color: #999; background-color: #fff; }
+
+#HTMLReporter .summaryMenuItem { font-weight: normal; text-decoration: none; margin-right: 5px; color: #333; }
+#HTMLReporter .detailsMenuItem { font-weight: normal; text-decoration: none; margin-left: 5px; color: #999; }
+
+#HTMLReporter.showDetails .summaryMenuItem { color: #999; }
+#HTMLReporter.showDetails .detailsMenuItem { color: #333; }
 #HTMLReporter.showDetails .summaryMenuItem:hover { text-decoration: underline; }
-#HTMLReporter.showDetails .detailsMenuItem { font-weight: bold; text-decoration: underline; }
+#HTMLReporter             .detailsMenuItem:hover { text-decoration: underline; }
+
+
 #HTMLReporter.showDetails .summary { display: none; }
 #HTMLReporter.showDetails #details { display: block; }
-#HTMLReporter .summaryMenuItem { font-weight: bold; text-decoration: underline; }
-#HTMLReporter .summary { margin-top: 14px; }
+#HTMLReporter .summary { margin-top: 14px; margin-bottom: 40px; }
 #HTMLReporter .summary .suite .suite, #HTMLReporter .summary .specSummary { margin-left: 14px; }
-#HTMLReporter .summary .specSummary.passed span { color: #5e7d00; }
-#HTMLReporter .summary .specSummary.failed span { color: #b03911; }
+#HTMLReporter .summary .specSummary.passed { color: #5e7d00; }
+#HTMLReporter .summary .specSummary.failed { color: #b03911; }
+#HTMLReporter .summary .specSummary.skipped { color: #ba9d37; }
 #HTMLReporter .description + .suite { margin-top: 0; }
 #HTMLReporter .suite { margin-top: 14px; }
 #HTMLReporter .suite a { color: #333333; }
@@ -43,6 +52,15 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter .resultMessage { padding-top: 14px; color: #333333; }
 #HTMLReporter .resultMessage span.result { display: block; }
 #HTMLReporter .stackTrace { margin: 5px 0 0 0; max-height: 224px; overflow: auto; line-height: 18px; color: #666666; border: 1px solid #ddd; background: white; white-space: pre; }
+
+#HTMLReporter .br {
+	margin-top: 8px;
+}
+#HTMLReporter .section-starter {
+	margin-top: 20px;
+	font-size: 14px;
+	line-height: 18px;
+}
 </style>
  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
  <script>
@@ -59,25 +77,30 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 </head>
 
 <body id="HTMLReporter" class="html-reporter{{#results.hasFailed}} showDetails{{/results.hasFailed}}">
-<h1>{{browserName}}</h1>
+<h1>Tested in {{browserName}} on {{date}}</h1>
 
 <div class="alert">
 {{#results}}
 {{#hasFailed}}
-<span class="failingAlert bar">Failed {{failed}} specs</span>
+<!-- <span class="failingAlert bar">Failed {{failed}} specs</span> -->
+<span class="failingAlert bar">{{total}} specs, {{failed}} failed, {{skipped}} pending</span>
 <span class="resultsMenu bar">
-<a class="summaryMenuItem" href="#">{{total}} specs<a>|<a class="detailsMenuItem" href="#">{{failed}} failing</a>
+<a class="summaryMenuItem" href="#">Spec List<a>|<a class="detailsMenuItem" href="#">Failures</a>
 </span>
 {{/hasFailed}}
 {{^hasFailed}}
 	{{#hasSuccess}}
-	<span class="passingAlert bar">Passing {{success}} specs</span>
+	<span class="passingAlert bar">{{total}} specs, {{failed}} failed, {{skipped}} pending</span>
 	{{/hasSuccess}}
 {{/hasFailed}}
 {{/results}}
 </div>
 <div class="results">
 	<div class="summary">
+	
+	{{#lines}}
+		<div class="{{className}}" style="{{style}}">{{value}}</div>
+	{{/lines}}
 
 
 	{{#suites}}

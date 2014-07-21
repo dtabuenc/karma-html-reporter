@@ -45,18 +45,32 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	};
 
 	this.onRunComplete = function(browsers) {
-		pendingFileWritings = browsers.length
+		
+		pendingFileWritings = browsers.length;
 		browsers.forEach(function(browser) {
-			var results = browserResults[browser.id]
+			var results = browserResults[browser.id];
 
 			prepareResults(results);
+			
+			// whether report name should go into file name istead of a folder
+			var namedFiles = config.namedFiles || false;
+			
 			var outputDir = config.outputDir || 'karma_html';
+			var reportName = config.reportName || config.middlePathDir || results.browserName;
+			results.pageTitle = reportName; // inject into head 
+			var reportFile = outputDir + '/' + reportName + (namedFiles ? '.html' : '/index.html');
+			var writeStream;
+			
+			// increases indentation for each nested describe; template will use results.lines 
+			// results.suites was used for failed specs; now we need for template to ignore it
+			if (config.preserveDescribeNesting) results.suites = null;
+			
+			results.date = new Date().toDateString();
+			
 			var templatePath = config.templatePath || __dirname + "/jasmine_template.html";
 			var template = mu.compileAndRender(templatePath, results);
-			var middlePathName = config.middlePathDir || results.browserName;
 			template.pause();
-			var reportFile = outputDir + '/' + middlePathName + '/index.html';
-			var writeStream;
+			
 			helper.mkdirIfNotExists(path.dirname(reportFile), function() {
 
 				writeStream = fs.createWriteStream(reportFile, function(err) {
@@ -95,9 +109,52 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			done();
 		}
 	});
+	
+	// for preserveDescribeNesting {
+		var currentSuiteName = [], // current set of `describe` names as an array of strings
+				currentIndent = 0; // in 'levels'
+		function compareSuiteNames(current, next) { // simple array comparison
+			if (current.length !== next.length) return false;
+			for (var i= 0, l= current.length; i < l; i++) {
+				if (current[i] !== next[i]) return false;
+			}
+			return true;
+		}
+	// }
 
 	function getOrCreateSuite(browser, result) {
 		var suites = browserResults[browser.id].suites;
+		
+		if (config.preserveDescribeNesting) { // generate lines
+			if (!browserResults[browser.id].lines) browserResults[browser.id].lines = [];
+			
+			var lines = browserResults[browser.id].lines,
+					lastIndent = currentIndent,
+					describeAdded = false; // whether new `describe` line was added
+				
+			if (!compareSuiteNames(currentSuiteName, result.suite)) { // combined `describe` changed
+				currentIndent += result.suite.length - currentSuiteName.length - 1;
+				if (result.suite.length > currentSuiteName.length ||
+						!compareSuiteNames(_.first(currentSuiteName, result.suite.length), result.suite)) {
+					lines.push({ // `describe` line
+						className: 'description'+ (!currentIndent ? ' section-starter' : ' br'),
+						style: 'margin-left:'+ (currentIndent * 14) + 'px',
+						value: result.suite[currentIndent],
+					});
+					describeAdded = true;
+				}
+				currentSuiteName = result.suite;
+				currentIndent++;
+			}
+			lines.push({ // spec line 
+				className: 'specSummary '+ 
+									 (result.skipped ? 'skipped' : result.success ? 'passed' : 'failed') +
+									 (currentIndent < lastIndent && !describeAdded ? ' br' : ''),
+				style: 'margin-left:'+ (currentIndent * 14) + 'px',
+				value: result.description,
+			});
+		}
+
 		var suiteKey = result.suite.join(" ");
 		if (suites[suiteKey] === undefined) {
 			return suites[suiteKey] = { specs : [] };
