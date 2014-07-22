@@ -10,6 +10,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 #HTMLReporter a:hover { text-decoration: underline; }
 #HTMLReporter p, #HTMLReporter h1, #HTMLReporter h2, #HTMLReporter h3, #HTMLReporter h4, #HTMLReporter h5, #HTMLReporter h6 { margin: 0; line-height: 14px; }
 #HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
+{{#sections}}#HTMLReporter .summary { padding: 0; }{{/sections}}
 #HTMLReporter #jasmine_content { position: fixed; right: 100%; }
 #HTMLReporter .version { color: #aaaaaa; }
 #HTMLReporter .banner { margin-top: 14px; }
@@ -59,12 +60,19 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 .fold-buttons a { color: #fff; font-size: 12px; }
 #HTMLReporter .br { margin-top: 8px; }
 #HTMLReporter .section-starter { font-size: 14px; line-height: 18px }
-#HTMLReporter .summary-section { cursor: -webkit-zoom-out; cursor: -moz-zoom-out; 
-                                 cursor: zoom-out;  padding: 10px; border-bottom: #ddd 1px solid; }
-#HTMLReporter .summary-section.folded { cursor: -webkit-zoom-in; cursor: -moz-zoom-in; cursor: zoom-in; }
+#HTMLReporter .summary-section { 
+  cursor: -webkit-zoom-out; cursor: -moz-zoom-out; cursor: zoom-out; 
+  background: #fafafa; 
+  padding: 10px; 
+  border-bottom: #eaeaea 1px solid; }
+#HTMLReporter .summary-section.folded { 
+  cursor: -webkit-zoom-in; cursor: -moz-zoom-in; cursor: zoom-in; 
+  padding-bottom: 8px;
+}
 #HTMLReporter .summary-section.folded div { display: none }
 #HTMLReporter .summary-section.folded div.section-starter { display: block }
-#HTMLReporter .summary-section:hover { background: #e9e9e9; }
+/*#HTMLReporter .summary-section:hover { background: #e9e9e9; }*/
+#HTMLReporter .summary-section:hover { background: #f5f5f5; }
 #HTMLReporter .summary-section-totals { 
   font-size: 11px;
   display: none; 
@@ -84,7 +92,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 </style>
 </head>
 
-<body id="HTMLReporter" class="html-reporter{{#results.hasFailed}} showDetails{{/results.hasFailed}}">
+<body id="HTMLReporter" class="html-reporter{{#focusOnFailures}} showDetails{{/focusOnFailures}}">
 <h1>Tested in {{browserName}} on {{date}}</h1>
 
 <div class="alert">
@@ -149,6 +157,17 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 
 <script>
 
+var folded = {{foldAll}};
+
+document.body.onkeypress = function (e) {
+  if (!e || !e.keyCode) return;
+  switch (e.keyCode) {
+    case 102: toggleFold(); break;
+    case 49: showSummary(); break;
+    case 50: showFailures(); break;
+  }
+};
+
 function showSummary() { document.body.className = "html-reporter showSummary"; }
 function showFailures() { document.body.className = "html-reporter showDetails"; }
 
@@ -156,17 +175,20 @@ function toggleSection(el) {
   el.className = el.className === 'summary-section' ? 'summary-section folded' : 'summary-section';
 }
 
+function toggleFold() { (folded) ? unfold() : fold(); }
 function fold() {
   var els = document.querySelectorAll('.summary-section');
   for (var i = 0; i < els.length; i++) {
     els[i].className = 'summary-section folded';
   }
+  folded = true;
 }
 function unfold() {
   var els = document.querySelectorAll('.summary-section');
   for (var i = 0; i < els.length; i++) {
     els[i].className = 'summary-section';
   }
+  folded = false;
 }
 
 </script>

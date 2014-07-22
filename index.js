@@ -34,8 +34,14 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			'package' : pkgName,
 			timestamp : timestamp,
 			hostname : os.hostname(),
-			suites : {}
+			suites : {},
+			sections: null,
 		};
+		
+		// preserveDescribeNesting stuff
+		currentSuiteName = []; // current set of `describe` names as an array of strings
+		currentIndent = 0; // in 'levels'
+		sectionIndex = -1; // current top-level `describe` in processing 
 	};
 
 	this.onBrowserComplete = function(browser) {
@@ -55,9 +61,13 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			// whether report name should go into file name istead of a folder
 			var namedFiles = config.namedFiles || false;
 			
+			// whether to select the Failures tab automatically 
+			results.focusOnFailures = config.focusOnFailures !== false && results.results.hasFailed;
+			
 			var outputDir = config.outputDir || 'karma_html';
 			var reportName = config.reportName || config.middlePathDir || results.browserName;
-			results.pageTitle = reportName; // inject into head 
+			results.pageTitle = config.pageTitle || reportName; // inject into head 
+			if (config.urlFriendlyName) reportName = reportName.replace(/ /g, '_');
 			var reportFile = outputDir + '/' + reportName + (namedFiles ? '.html' : '/index.html');
 			var writeStream;
 			
@@ -172,9 +182,11 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	}
 
 	function prepareResults(browser) {
+		browser.foldAll = (!!config.foldAll).toString(); // pass var to the template 
 		if (config.preserveDescribeNesting && browser.sections) { // generate section totals 
 			var k = ['passed', 'failed', 'skipped'], i, n;
 			for (i = 0; i < browser.sections.length; i++) {
+				if (!browser.sections[i]) continue;
 				browser.sections[i].lines[0].totals = [];
 				for (n = 0; n < k.length; n++) {
 					if (browser.sections[i][ k[n] ]) browser.sections[i].lines[0].totals.push({
