@@ -58,6 +58,7 @@ body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
 
 .fold-buttons { float: right; }
 .fold-buttons a { color: #fff; font-size: 12px; }
+{{^sections}}.fold-buttons { display: none } {{/sections}}
 #HTMLReporter .br { margin-top: 8px; }
 #HTMLReporter .section-starter { font-size: 14px; line-height: 18px }
 #HTMLReporter .summary-section { 
@@ -164,7 +165,7 @@ document.body.onkeypress = function (e) {
   switch (e.keyCode) {
     case 102: toggleFold(); break;
     case 49: showSummary(); break;
-    case 50: showFailures(); break;
+    {{#failedSuites}}case 50: showFailures(); break;{{/failedSuites}}
   }
 };
 

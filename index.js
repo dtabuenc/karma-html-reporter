@@ -13,6 +13,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	var browserResults = {};
 	var allMessages = [];
 	var pendingFileWritings = 0;
+	var env = {}; // for preserveDescribeNesting
 	var fileWritingFinished = function() {
 	};
 
@@ -35,13 +36,14 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			timestamp : timestamp,
 			hostname : os.hostname(),
 			suites : {},
-			sections: null,
+			sections: null, // for preserveDescribeNesting
 		};
 		
-		// preserveDescribeNesting stuff
-		currentSuiteName = []; // current set of `describe` names as an array of strings
-		currentIndent = 0; // in 'levels'
-		sectionIndex = -1; // current top-level `describe` in processing 
+		env[browser.id] = { // preserveDescribeNesting stuff
+			currentSuiteName: [], // current set of `describe` names as an array of strings
+			currentIndent: 0, // in 'levels'
+			sectionIndex: -1, // current top-level `describe` in processing 
+		};
 	};
 
 	this.onBrowserComplete = function(browser) {
@@ -116,19 +118,13 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		}
 	});
 	
-	// for preserveDescribeNesting {
-		var currentSuiteName = []; // current set of `describe` names as an array of strings
-		var currentIndent = 0; // in 'levels'
-		var sectionIndex = -1; // current top-level `describe` in processing 
-		
-		function compareSuiteNames(current, next) { // simple array comparison
-			if (current.length !== next.length) return false;
-			for (var i= 0, l= current.length; i < l; i++) {
-				if (current[i] !== next[i]) return false;
-			}
-			return true;
+	function compareSuiteNames(current, next) { // simple array comparison for preserveDescribeNesting
+		if (current.length !== next.length) return false;
+		for (var i= 0, l= current.length; i < l; i++) {
+			if (current[i] !== next[i]) return false;
 		}
-	// }
+		return true;
+	}
 
 	function getOrCreateSuite(browser, result) {
 		var suites = browserResults[browser.id].suites;
@@ -136,40 +132,52 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		if (config.preserveDescribeNesting) { // generate sections
 			if (!browserResults[browser.id].sections) browserResults[browser.id].sections = [];
 			var sections = browserResults[browser.id].sections;
+			var e = env[browser.id];
 			
-			var lastIndent = currentIndent;
+			var lastIndent = e.currentIndent;
 			var describeAdded = false; // whether new `describe` line was added
+			
+			if (!compareSuiteNames(e.currentSuiteName, result.suite)) { // combined `describe` changed
+				e.currentIndent += result.suite.length - e.currentSuiteName.length - 1;
 				
-			if (!compareSuiteNames(currentSuiteName, result.suite)) { // combined `describe` changed
-				currentIndent += result.suite.length - currentSuiteName.length - 1;
-				
-				if (result.suite.length > currentSuiteName.length ||
-						!compareSuiteNames(_.first(currentSuiteName, result.suite.length), result.suite)) {
+				if (result.suite.length > e.currentSuiteName.length ||
+						!compareSuiteNames(_.first(e.currentSuiteName, result.suite.length), result.suite)) {
 					
-					if (!currentIndent) sectionIndex++; // opening a new section 
-					if (!sections[sectionIndex]) sections[sectionIndex] = { lines: [], 
+					if (!e.currentIndent) e.sectionIndex++; // opening a new section 
+					if (!sections[e.sectionIndex]) sections[e.sectionIndex] = { lines: [], 
 							passed: 0, failed: 0, skipped: 0, folded: config.foldAll ? ' folded' : '' };
-						
-					sections[sectionIndex].lines.push({ // `describe` line
-						className: 'description'+ (!currentIndent ? ' section-starter' : ' br'),
-						style: 'margin-left:'+ (currentIndent * 14) + 'px',
-						value: result.suite[currentIndent],
-						before: !currentIndent ? '</div><div class="summary-section'+ // foldable section
-								(config.foldAll ? ' folded' : '') + '" onclick="toggleSection(this);">' : '',
+					
+					sections[e.sectionIndex].lines.push({ // `describe` line
+						className: 'description'+ (!e.currentIndent ? ' section-starter' : ' br'),
+						style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
+						value: result.suite[e.currentIndent],
 					});
 					describeAdded = true;
 				}
-				currentSuiteName = result.suite;
-				currentIndent++;
+				e.currentSuiteName = result.suite;
+				e.currentIndent++;
 			}
-			sections[sectionIndex].lines.push({ // spec line 
+			
+			// in case the list start with iit - wrap it into an anonymous suite
+			if (!sections[e.sectionIndex] && e.sectionIndex === -1) {
+				e.sectionIndex = 0;
+				sections[e.sectionIndex] = { lines: [], 
+						passed: 0, failed: 0, skipped: 0, folded: config.foldAll ? ' folded' : '' };
+				sections[e.sectionIndex].lines.push({ // `describe` line
+					className: 'description section-starter',
+					style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
+					value: 'Anonymous Suite',
+				});
+				e.currentIndent = 1;
+			}
+			sections[e.sectionIndex].lines.push({ // spec line 
 				className: 'specSummary '+ 
 									 (result.skipped ? 'skipped' : result.success ? 'passed' : 'failed') +
-									 (currentIndent < lastIndent && !describeAdded ? ' br' : ''),
-				style: 'margin-left:'+ (currentIndent * 14) + 'px',
+									 (e.currentIndent < lastIndent && !describeAdded ? ' br' : ''),
+				style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
 				value: result.description,
 			});
-			sections[sectionIndex][result.skipped ? 'skipped' : result.success ? 'passed' : 'failed']++;
+			sections[e.sectionIndex][result.skipped ? 'skipped' : result.success ? 'passed' : 'failed']++;
 		}
 
 		var suiteKey = result.suite.join(" ");
@@ -186,7 +194,6 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		if (config.preserveDescribeNesting && browser.sections) { // generate section totals 
 			var k = ['passed', 'failed', 'skipped'], i, n;
 			for (i = 0; i < browser.sections.length; i++) {
-				if (!browser.sections[i]) continue;
 				browser.sections[i].lines[0].totals = [];
 				for (n = 0; n < k.length; n++) {
 					if (browser.sections[i][ k[n] ]) browser.sections[i].lines[0].totals.push({
