@@ -14,7 +14,7 @@ The easiest way is to keep `karma-html-reporter` as a devDependency in your `pac
 }
 ```
 
-You can simple do it by:
+You can simply do it by:
 ```bash
 npm install karma-html-reporter --save-dev
 ```
@@ -28,9 +28,16 @@ module.exports = function(config) {
 
     // the default configuration
     htmlReporter: {
-      outputDir: 'karma_html',
-      templatePath: __dirname+'/jasmine_template.html'
-    }
+      outputDir: 'karma_html', // where to put the reports 
+      templatePath: null, // set if you moved jasmine_template.html
+      
+      focusOnFailures: true, // reports show failures on start
+      namedFiles: false, // name files instead of creating sub-directories
+      preserveDescribeNesting: false, // folded suites stay folded 
+      foldAll: false, // reports start folded (only with preserveDescribeNesting)
+      pageTitle: null, // page title for reports; browser info by default
+      urlFriendlyName: false // simply replaces spaces with _ for files/dirs
+    },
   });
 };
 ```
@@ -39,6 +46,11 @@ You can pass list of reporters as a CLI argument too:
 ```bash
 karma start --reporters html,dots
 ```
+
+## Keyboard Controls
+
+`1` and `2` - switch between Spec List and Failures.
+`F` - fold/unfold all suites in `preserveDescribeNesting` mode.
 
 ----
 
