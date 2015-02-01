@@ -48,8 +48,10 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 
 	this.onBrowserComplete = function(browser) {
 		var browserResult = browserResults[browser.id];
-		browserResult.results = browser.lastResult;
-		browserResult.output = allMessages;
+		if(browserResult != undefined){
+			browserResult.results = browser.lastResult;
+			browserResult.output = allMessages;
+		}
 	};
 
 	this.onRunComplete = function(browsers) {
@@ -58,6 +60,9 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		browsers.forEach(function(browser) {
 			var results = browserResults[browser.id];
 
+			if(results == undefined){
+				return;
+			}
 			prepareResults(results);
 			
 			// whether report name should go into file name istead of a folder
