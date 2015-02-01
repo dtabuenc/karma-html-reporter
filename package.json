@@ -35,6 +35,7 @@
     "grunt-auto-release": "~0.0.2"
   },
   "contributors": [
+    "jonyio <johnny3k@gmail.com>",
     "Daniel Tabuenca <dtabuenca@solutionstream.com>",
     "David Epely <david.epely@pmsipilot.com>",
     "Shawn Fumo <shawn@shawnfumo.com>",
