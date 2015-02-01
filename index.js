@@ -13,6 +13,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	var browserResults = {};
 	var allMessages = [];
 	var pendingFileWritings = 0;
+	var env = {}; // for preserveDescribeNesting
 	var fileWritingFinished = function() {
 	};
 
@@ -34,7 +35,14 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			'package' : pkgName,
 			timestamp : timestamp,
 			hostname : os.hostname(),
-			suites : {}
+			suites : {},
+			sections: null, // for preserveDescribeNesting
+		};
+		
+		env[browser.id] = { // preserveDescribeNesting stuff
+			currentSuiteName: [], // current set of `describe` names as an array of strings
+			currentIndent: 0, // in 'levels'
+			sectionIndex: -1, // current top-level `describe` in processing 
 		};
 	};
 
@@ -45,18 +53,32 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	};
 
 	this.onRunComplete = function(browsers) {
-		pendingFileWritings = browsers.length
+		
+		pendingFileWritings = browsers.length;
 		browsers.forEach(function(browser) {
-			var results = browserResults[browser.id]
+			var results = browserResults[browser.id];
 
 			prepareResults(results);
+			
+			// whether report name should go into file name istead of a folder
+			var namedFiles = config.namedFiles || false;
+			
+			// whether to select the Failures tab automatically 
+			results.focusOnFailures = config.focusOnFailures !== false && results.results.hasFailed;
+			
 			var outputDir = config.outputDir || 'karma_html';
+			var reportName = config.reportName || config.middlePathDir || results.browserName;
+			results.pageTitle = config.pageTitle || reportName; // inject into head 
+			if (config.urlFriendlyName) reportName = reportName.replace(/ /g, '_');
+			var reportFile = outputDir + '/' + reportName + (namedFiles ? '.html' : '/index.html');
+			var writeStream;
+			
+			results.date = new Date().toDateString();
+			
 			var templatePath = config.templatePath || __dirname + "/jasmine_template.html";
 			var template = mu.compileAndRender(templatePath, results);
-			var middlePathName = config.middlePathDir || results.browserName;
 			template.pause();
-			var reportFile = outputDir + '/' + middlePathName + '/index.html';
-			var writeStream;
+			
 			helper.mkdirIfNotExists(path.dirname(reportFile), function() {
 
 				writeStream = fs.createWriteStream(reportFile, function(err) {
@@ -95,9 +117,69 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			done();
 		}
 	});
+	
+	function compareSuiteNames(current, next) { // simple array comparison for preserveDescribeNesting
+		if (current.length !== next.length) return false;
+		for (var i= 0, l= current.length; i < l; i++) {
+			if (current[i] !== next[i]) return false;
+		}
+		return true;
+	}
 
 	function getOrCreateSuite(browser, result) {
 		var suites = browserResults[browser.id].suites;
+		
+		if (config.preserveDescribeNesting) { // generate sections
+			if (!browserResults[browser.id].sections) browserResults[browser.id].sections = [];
+			var sections = browserResults[browser.id].sections;
+			var e = env[browser.id];
+			
+			var lastIndent = e.currentIndent;
+			var describeAdded = false; // whether new `describe` line was added
+			
+			if (!compareSuiteNames(e.currentSuiteName, result.suite)) { // combined `describe` changed
+				e.currentIndent += result.suite.length - e.currentSuiteName.length - 1;
+				
+				if (result.suite.length > e.currentSuiteName.length ||
+						!compareSuiteNames(_.first(e.currentSuiteName, result.suite.length), result.suite)) {
+					
+					if (!e.currentIndent) e.sectionIndex++; // opening a new section 
+					if (!sections[e.sectionIndex]) sections[e.sectionIndex] = { lines: [], 
+							passed: 0, failed: 0, skipped: 0, folded: config.foldAll ? ' folded' : '' };
+					
+					sections[e.sectionIndex].lines.push({ // `describe` line
+						className: 'description'+ (!e.currentIndent ? ' section-starter' : ' br'),
+						style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
+						value: result.suite[e.currentIndent],
+					});
+					describeAdded = true;
+				}
+				e.currentSuiteName = result.suite;
+				e.currentIndent++;
+			}
+			
+			// in case the list start with iit - wrap it into an anonymous suite
+			if (!sections[e.sectionIndex] && e.sectionIndex === -1) {
+				e.sectionIndex = 0;
+				sections[e.sectionIndex] = { lines: [], 
+						passed: 0, failed: 0, skipped: 0, folded: config.foldAll ? ' folded' : '' };
+				sections[e.sectionIndex].lines.push({ // `describe` line
+					className: 'description section-starter',
+					style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
+					value: 'Anonymous Suite',
+				});
+				e.currentIndent = 1;
+			}
+			sections[e.sectionIndex].lines.push({ // spec line 
+				className: 'specSummary '+ 
+									 (result.skipped ? 'skipped' : result.success ? 'passed' : 'failed') +
+									 (e.currentIndent < lastIndent && !describeAdded ? ' br' : ''),
+				style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
+				value: result.description,
+			});
+			sections[e.sectionIndex][result.skipped ? 'skipped' : result.success ? 'passed' : 'failed']++;
+		}
+
 		var suiteKey = result.suite.join(" ");
 		if (suites[suiteKey] === undefined) {
 			return suites[suiteKey] = { specs : [] };
@@ -108,6 +190,20 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 	}
 
 	function prepareResults(browser) {
+		browser.foldAll = (!!config.foldAll).toString(); // pass var to the template 
+		if (config.preserveDescribeNesting && browser.sections) { // generate section totals 
+			var k = ['passed', 'failed', 'skipped'], i, n;
+			for (i = 0; i < browser.sections.length; i++) {
+				browser.sections[i].lines[0].totals = [];
+				for (n = 0; n < k.length; n++) {
+					if (browser.sections[i][ k[n] ]) browser.sections[i].lines[0].totals.push({
+						result: k[n],
+						count: browser.sections[i][ k[n] ],
+					});
+				}
+			}
+		}
+		
 		browser.suites = suitesToArray(browser.suites);
 		var results = browser.results;
 		results.hasSuccess = results.success > 0;
@@ -143,7 +239,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 
 	function getOverallState(specs) {
 		if (_.any(specs, function(spec) {
-			return spec.state === "failed"
+			return spec.state === "failed";
 		})) {
 			return "failed";
 		}
@@ -154,7 +250,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 
 	function getFailedSuites(suites) {
 		return _.filter(suites,function(suite) {
-			return suite.state === "failed"
+			return suite.state === "failed";
 		}).map(function(suite) {
 			 var newSuite = _.clone(suite);
 			 newSuite.specs = getFailedSpecs(suite.specs);
