@@ -60,7 +60,10 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 		browsers.forEach(function(browser) {
 			var results = browserResults[browser.id];
 
-			if(results == undefined){
+			if (results == undefined) {
+				if (!--pendingFileWritings) {
+					fileWritingFinished();
+				}
 				return;
 			}
 			prepareResults(results);
