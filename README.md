@@ -33,7 +33,8 @@ module.exports = function(config) {
       focusOnFailures: true, // reports show failures on start
       namedFiles: false, // name files instead of creating sub-directories
       pageTitle: null, // page title for reports; browser info by default
-      urlFriendlyName: false // simply replaces spaces with _ for files/dirs
+      urlFriendlyName: false, // simply replaces spaces with _ for files/dirs
+      reportName: 'report-summary-filename', // report summary filename; browser info by default
       
       
       // experimental
