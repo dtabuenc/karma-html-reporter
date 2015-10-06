@@ -1,6 +1,6 @@
 {
   "name": "karma-html-reporter",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A Karma plugin. Report results in pretty html format.",
   "main": "index.js",
   "scripts": {
@@ -37,7 +37,10 @@
   "contributors": [
     "jonyio <johnny3k@gmail.com>",
     "Daniel Tabuenca <dtabuenca@solutionstream.com>",
+    "MikeMatusz <mikematusz@gmail.com>",
     "David Epely <david.epely@pmsipilot.com>",
+    "Jonathan Argentiero <jonathan.argentiero@gmail.com>",
+    "Michaël Zasso <mic.besace@gmail.com>",
     "Shawn Fumo <shawn@shawnfumo.com>",
     "nick.mccready <nmccready@gmail.com>"
   ]
