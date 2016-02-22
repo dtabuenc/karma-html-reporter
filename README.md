@@ -41,6 +41,13 @@ module.exports = function(config) {
       preserveDescribeNesting: false, // folded suites stay folded 
       foldAll: false, // reports start folded (only with preserveDescribeNesting)
     },
+    
+    // add to plugins
+    plugins: [
+      // other plugins
+      'karma-html-reporter'
+    ],
+
   });
 };
 ```
