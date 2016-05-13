@@ -22,7 +22,7 @@
   "author": "Daniel Tabuenca <dtabuenc@gmail.com>",
   "dependencies": {
     "mu2": "~0.5.19",
-    "lodash": "~2.2.0"
+    "lodash": "~4.12.0"
   },
   "peerDependencies": {
     "karma": ">=0.11"
