@@ -113,6 +113,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 
 	this.specSuccess = this.specSkipped = this.specFailure = function(browser, result) {
 		var suite = getOrCreateSuite(browser, result);
+        	result.log = _.map(result.log, formatError);
 		suite.specs.push(result);
 	};
 
