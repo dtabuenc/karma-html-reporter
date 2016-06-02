@@ -5,7 +5,7 @@ var _ = require('lodash');
 var mu = require('mu2');
 
 
-var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, helper, formatError) {
+var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, logger, helper, formatError) {
 	config = config || {};
 	var pkgName = config.suite;
 	var log = logger.create('reporter.html');
@@ -36,13 +36,13 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			timestamp : timestamp,
 			hostname : os.hostname(),
 			suites : {},
-			sections: null, // for preserveDescribeNesting
+			sections: null // for preserveDescribeNesting
 		};
 		
 		env[browser.id] = { // preserveDescribeNesting stuff
 			currentSuiteName: [], // current set of `describe` names as an array of strings
 			currentIndent: 0, // in 'levels'
-			sectionIndex: -1, // current top-level `describe` in processing 
+			sectionIndex: -1 // current top-level `describe` in processing
 		};
 	};
 
@@ -74,7 +74,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			// whether to select the Failures tab automatically 
 			results.focusOnFailures = config.focusOnFailures !== false && results.results.hasFailed;
 			
-			var outputDir = config.outputDir || 'karma_html';
+			var outputDir = path.resolve(basePath, config.outputDir || 'karma_html');
 			var reportName = config.reportName || config.middlePathDir || results.browserName;
 			results.pageTitle = config.pageTitle || reportName; // inject into head 
 			if (config.urlFriendlyName) reportName = reportName.replace(/ /g, '_');
@@ -158,7 +158,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 					sections[e.sectionIndex].lines.push({ // `describe` line
 						className: 'description'+ (!e.currentIndent ? ' section-starter' : ' br'),
 						style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
-						value: result.suite[e.currentIndent],
+						value: result.suite[e.currentIndent]
 					});
 					describeAdded = true;
 				}
@@ -174,7 +174,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 				sections[e.sectionIndex].lines.push({ // `describe` line
 					className: 'description section-starter',
 					style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
-					value: 'Anonymous Suite',
+					value: 'Anonymous Suite'
 				});
 				e.currentIndent = 1;
 			}
@@ -183,7 +183,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 									 (result.skipped ? 'skipped' : result.success ? 'passed' : 'failed') +
 									 (e.currentIndent < lastIndent && !describeAdded ? ' br' : ''),
 				style: 'margin-left:'+ (e.currentIndent * 14) + 'px',
-				value: result.description,
+				value: result.description
 			});
 			sections[e.sectionIndex][result.skipped ? 'skipped' : result.success ? 'passed' : 'failed']++;
 		}
@@ -206,7 +206,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 				for (n = 0; n < k.length; n++) {
 					if (browser.sections[i][ k[n] ]) browser.sections[i].lines[0].totals.push({
 						result: k[n],
-						count: browser.sections[i][ k[n] ],
+						count: browser.sections[i][ k[n] ]
 					});
 				}
 			}
@@ -275,7 +275,7 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 
 };
 
-HtmlReporter.$inject = ['baseReporterDecorator', 'config.htmlReporter', 'emitter', 'logger', 'helper', 'formatError'];
+HtmlReporter.$inject = ['baseReporterDecorator', 'config.basePath', 'config.htmlReporter', 'emitter', 'logger', 'helper', 'formatError'];
 
 // PUBLISH DI MODULE
 module.exports = {
