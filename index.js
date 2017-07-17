@@ -58,15 +58,14 @@ var HtmlReporter = function(baseReporterDecorator, config, emitter, logger, help
 			var writeStream;
 			helper.mkdirIfNotExists(path.dirname(reportFile), function() {
 
-				writeStream = fs.createWriteStream(reportFile, function(err) {
-					if (err) {
-						log.warn('Cannot write HTML Report\n\t' + err.message);
-					} else {
-						log.debug('HTML report written to "%s".', reportFile);
-					}
+				writeStream = fs.createWriteStream(reportFile)
+
+				writeStream.on('error', , function(err) {
+					log.warn('Cannot write HTML Report\n\t' + err.message);
 				});
 
 				writeStream.on('finish', function() {
+					log.debug('HTML report written to "%s".', reportFile);
 					if (!--pendingFileWritings) {
 						fileWritingFinished();
 					}
