@@ -76,7 +76,13 @@ var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, lo
 			
 			var outputDir = path.resolve(basePath, config.outputDir || 'karma_html');
 			var reportName = config.reportName || config.middlePathDir || results.browserName;
-			results.pageTitle = config.pageTitle || reportName; // inject into head 
+			if (reportName instanceof Function) {
+				reportName = reportName(results.browserName);
+			}
+			results.pageTitle = config.pageTitle || reportName; // inject into head
+			if (results.pageTitle instanceof Function) {
+				results.pageTitle = results.pageTitle.call(undefined, results.browserName);
+			}
 			if (config.urlFriendlyName) reportName = reportName.replace(/ /g, '_');
 			var reportFile = outputDir + '/' + reportName + (namedFiles ? '.html' : '/index.html');
 			var writeStream;
