@@ -112,6 +112,9 @@ var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, lo
 
 
 	this.specSuccess = this.specSkipped = this.specFailure = function(browser, result) {
+        if(!browserResults[browser.id]){
+            return;
+        }
 		var suite = getOrCreateSuite(browser, result);
         	result.log = _.map(result.log, formatError);
 		suite.specs.push(result);
@@ -135,8 +138,8 @@ var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, lo
 	}
 
 	function getOrCreateSuite(browser, result) {
-		var suites = browserResults[browser.id].suites;
-		
+        var suites = browserResults[browser.id].suites;
+        
 		if (config.preserveDescribeNesting) { // generate sections
 			if (!browserResults[browser.id].sections) browserResults[browser.id].sections = [];
 			var sections = browserResults[browser.id].sections;
@@ -213,7 +216,7 @@ var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, lo
 		}
 		
 		browser.suites = suitesToArray(browser.suites);
-		var results = browser.results;
+		var results = browser.results || {};
 		results.hasSuccess = results.success > 0;
 		results.hasFailed = results.failed > 0;
 		results.hasSkipped = results.skipped > 0;
