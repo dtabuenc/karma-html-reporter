@@ -21,7 +21,7 @@
   ],
   "author": "Daniel Tabuenca <dtabuenc@gmail.com>",
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.20",
     "mu2": "~0.5.19"
   },
   "peerDependencies": {
