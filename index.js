@@ -189,10 +189,13 @@ var HtmlReporter = function(baseReporterDecorator, basePath, config, emitter, lo
 		}
 
 		var suiteKey = result.suite.join(" ");
+		// try using full name of suite as key
+                if ( _.isArray(result.suite) && result.suite.length && result.suite[result.suite.length-1].fullName ) {
+			suiteKey = result.suite[result.suite.length-1].fullName;
+                }
 		if (suites[suiteKey] === undefined) {
 			return suites[suiteKey] = { specs : [] };
-		}
-		else {
+		} else {
 			return suites[suiteKey];
 		}
 	}
